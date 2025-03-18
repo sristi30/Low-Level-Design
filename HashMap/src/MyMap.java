@@ -1,5 +1,3 @@
-import org.omg.CORBA.PRIVATE_MEMBER;
-
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -23,22 +21,23 @@ public class MyMap<K, V> {
         int index = hash(key);
 
         Entry<K, V> currentEntry = hashTable[index];
+        Entry<K, V> newEntry = new Entry<>(key, value);
         if (Objects.equals(currentEntry, null)) {
-            hashTable[index] = new Entry<>(key, value);
+            hashTable[index] = newEntry;
             return;
         }
-        while (currentEntry.getNext() != null) {
+        while (currentEntry != null) {
             if (currentEntry.getKey().equals(key)) {
+                currentEntry.setValue(value);
+                return;
+            }
+            if (currentEntry.getNext() == null) {
                 break;
             }
             currentEntry = currentEntry.getNext();
         }
-        if (currentEntry.getKey().equals(key)) {
-            currentEntry.setValue(value);
-        } else {
-            Entry<K, V> newEntry = new Entry<>(key, value);
             currentEntry.setNext(newEntry);
-        }
+
     }
 
     public V get(K key) {
@@ -56,26 +55,18 @@ public class MyMap<K, V> {
     public V remove(K key) {
         int index = hash(key);
         Entry<K, V> currentEntry = hashTable[index];
-        if (Objects.equals(currentEntry, null)) {
-            return null;
-        }
-        if (currentEntry.getKey().equals(key)) {
-            hashTable[index] = null;
-            return currentEntry.getValue();
-        }
-        if (Objects.equals(currentEntry.getNext(), null)) {
-            return null;
-        }
-        while (currentEntry.getNext().getNext() != null) {
-            if (currentEntry.getNext().getKey().equals(key)) {
-                break;
+        Entry<K, V> previousEntry = null;
+        while (currentEntry != null) {
+            if (currentEntry.getKey().equals(key)) {
+                if (previousEntry == null) {
+                    hashTable[index] = currentEntry.getNext();
+                } else {
+                    previousEntry.setNext(currentEntry.getNext());
+                }
+                return currentEntry.getValue();
             }
+            previousEntry = currentEntry;
             currentEntry = currentEntry.getNext();
-        }
-        if (currentEntry.getNext().getKey().equals(key)) {
-            V deletedValue = currentEntry.getNext().getValue();
-            currentEntry.setNext(currentEntry.getNext().getNext());
-            return deletedValue;
         }
         return null;
     }
